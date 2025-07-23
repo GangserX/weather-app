@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Forecast App</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌤️</text></svg>">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="app-title">
+                    <span class="weather-icon">🌤️</span>
+                    Weather Forecast
+                </h1>
+                <div class="header-controls">
+                    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                    <button class="unit-toggle" id="unitToggle" aria-label="Toggle temperature unit">
+                        <span class="unit-text">°F</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <div class="search-input-group">
+                    <input type="text" id="cityInput" placeholder="Enter city name..." class="search-input">
+                    <button class="search-btn" id="searchBtn" aria-label="Search weather">
+                        <span class="search-icon">🔍</span>
+                    </button>
+                    <button class="voice-btn" id="voiceBtn" aria-label="Voice search">
+                        <span class="voice-icon">🎤</span>
+                    </button>
+                    <button class="location-btn" id="locationBtn" aria-label="Use current location">
+                        <span class="location-icon">📍</span>
+                    </button>
+                </div>
+                <div class="recent-searches" id="recentSearches"></div>
+            </div>
+        </section>
+
+        <!-- Loading Skeleton -->
+        <div class="loading-skeleton" id="loadingSkeleton">
+            <div class="skeleton-card main-weather">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line skeleton-temp"></div>
+                <div class="skeleton-line skeleton-desc"></div>
+            </div>
+            <div class="skeleton-cards">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-container" id="errorContainer">
+            <div class="error-content">
+                <div class="error-icon">🌧️</div>
+                <h3 class="error-title">City Not Found</h3>
+                <p class="error-message" id="errorMessage">We couldn't find weather data for that location. Please check the spelling and try again.</p>
+                <button class="error-retry-btn" id="errorRetryBtn">Try Again</button>
+            </div>
+        </div>
+
+        <!-- Main Weather Display -->
+        <main class="main-content" id="mainContent">
+            <!-- Current Weather Card -->
+            <section class="current-weather" id="currentWeather">
+                <div class="weather-header">
+                    <div class="location-info">
+                        <h2 class="city-name" id="cityName">Loading...</h2>
+                        <p class="country-name" id="countryName"></p>
+                        <p class="date-time" id="dateTime"></p>
+                    </div>
+                    <div class="weather-icon-main" id="weatherIconMain">
+                        <img src="" alt="Weather icon" id="weatherIcon">
+                    </div>
+                </div>
+                
+                <div class="temperature-display">
+                    <span class="temperature" id="temperature">--°</span>
+                    <div class="feels-like">
+                        <span>Feels like </span>
+                        <span id="feelsLike">--°</span>
+                    </div>
+                </div>
+                
+                <div class="weather-description">
+                    <p class="condition" id="weatherCondition">Loading...</p>
+                    <p class="description" id="weatherDescription"></p>
+                </div>
+            </section>
+
+            <!-- Weather Details Grid -->
+            <section class="weather-details">
+                <div class="detail-card">
+                    <div class="detail-icon">💧</div>
+                    <div class="detail-content">
+                        <span class="detail-label">Humidity</span>
+                        <span class="detail-value" id="humidity">--%</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon">🌪️</div>
+                    <div class="detail-content">
+                        <span class="detail-label">Wind Speed</span>
+                        <span class="detail-value" id="windSpeed">-- km/h</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon">🌡️</div>
+                    <div class="detail-content">
+                        <span class="detail-label">Pressure</span>
+                        <span class="detail-value" id="pressure">-- hPa</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon">👁️</div>
+                    <div class="detail-content">
+                        <span class="detail-label">Visibility</span>
+                        <span class="detail-value" id="visibility">-- km</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon">🌅</div>
+                    <div class="detail-content">
+                        <span class="detail-label">Sunrise</span>
+                        <span class="detail-value" id="sunrise">--:--</span>
+                    </div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon">🌇</div>
+                    <div class="detail-content">
+                        <span class="detail-label">Sunset</span>
+                        <span class="detail-value" id="sunset">--:--</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Air Quality Index -->
+            <section class="air-quality" id="airQuality">
+                <h3 class="section-title">Air Quality Index</h3>
+                <div class="aqi-card">
+                    <div class="aqi-value" id="aqiValue">--</div>
+                    <div class="aqi-status" id="aqiStatus">Loading...</div>
+                    <div class="aqi-description" id="aqiDescription"></div>
+                </div>
+            </section>
+
+            <!-- Temperature Chart -->
+            <section class="chart-section">
+                <h3 class="section-title">Temperature Trend</h3>
+                <div class="chart-container">
+                    <canvas id="temperatureChart"></canvas>
+                </div>
+            </section>
+
+            <!-- 5-Day Forecast -->
+            <section class="forecast-section">
+                <h3 class="section-title">5-Day Forecast</h3>
+                <div class="forecast-container" id="forecastContainer">
+                    <!-- Forecast cards will be dynamically generated -->
+                </div>
+            </section>
+
+            <!-- Map Section -->
+            <section class="map-section">
+                <h3 class="section-title">Location Map</h3>
+                <div class="map-container">
+                    <div id="weatherMap"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- PWA Install Prompt -->
+    <div class="install-prompt" id="installPrompt">
+        <div class="install-content">
+            <span class="install-icon">📱</span>
+            <span class="install-text">Install Weather App</span>
+            <button class="install-btn" id="installBtn">Install</button>
+            <button class="install-close" id="installClose">×</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
