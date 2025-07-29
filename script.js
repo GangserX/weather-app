@@ -134,11 +134,16 @@ class WeatherApp {
     toggleUnit() {
         const previousUnit = this.currentUnit;
         this.currentUnit = this.currentUnit === 'metric' ? 'imperial' : 'metric';
+        
+        console.log('Toggling from', previousUnit, 'to', this.currentUnit);
+        
         this.updateUnitDisplay();
         
         // Convert existing weather data to new unit
         if (this.currentWeatherData) {
+            console.log('Before conversion:', this.currentWeatherData.main.temp);
             this.convertWeatherDataUnits(this.currentWeatherData, previousUnit, this.currentUnit);
+            console.log('After conversion:', this.currentWeatherData.main.temp);
             this.displayWeatherData(this.currentWeatherData);
         }
         if (this.forecastData) {
@@ -377,6 +382,8 @@ class WeatherApp {
 
     // Display Functions
     displayWeatherData(data) {
+        console.log('Displaying weather data:', data.main.temp, 'Unit:', this.currentUnit);
+        
         // Location and time
         this.cityName.textContent = data.name;
         this.countryName.textContent = data.sys.country;
@@ -392,6 +399,8 @@ class WeatherApp {
         const feelsLike = Math.round(data.main.feels_like);
         const unit = this.currentUnit === 'metric' ? '°C' : '°F';
         
+        console.log('Setting temperature to:', `${temp}${unit}`);
+        
         this.temperature.textContent = `${temp}${unit}`;
         this.feelsLike.textContent = `${feelsLike}${unit}`;
 
@@ -406,8 +415,8 @@ class WeatherApp {
 
         // Wind speed
         const windSpeed = this.currentUnit === 'metric' 
-            ? `${data.wind.speed} m/s` 
-            : `${data.wind.speed} mph`;
+            ? `${Math.round(data.wind.speed * 10) / 10} m/s` 
+            : `${Math.round(data.wind.speed * 10) / 10} mph`;
         this.windSpeed.textContent = windSpeed;
 
         // Sunrise and sunset
