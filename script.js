@@ -132,17 +132,70 @@ class WeatherApp {
 
     // Unit Management
     toggleUnit() {
+        const previousUnit = this.currentUnit;
         this.currentUnit = this.currentUnit === 'metric' ? 'imperial' : 'metric';
         this.updateUnitDisplay();
+        
+        // Convert existing weather data to new unit
         if (this.currentWeatherData) {
+            this.convertWeatherDataUnits(this.currentWeatherData, previousUnit, this.currentUnit);
             this.displayWeatherData(this.currentWeatherData);
         }
         if (this.forecastData) {
+            this.convertForecastDataUnits(this.forecastData, previousUnit, this.currentUnit);
             this.displayForecast(this.forecastData);
         }
         if (this.temperatureChart) {
             this.updateTemperatureChart();
         }
+    }
+
+    // Temperature conversion utility functions
+    convertTemperature(temp, fromUnit, toUnit) {
+        if (fromUnit === toUnit) return temp;
+        
+        if (fromUnit === 'metric' && toUnit === 'imperial') {
+            // Celsius to Fahrenheit: (C × 9/5) + 32
+            return (temp * 9/5) + 32;
+        } else if (fromUnit === 'imperial' && toUnit === 'metric') {
+            // Fahrenheit to Celsius: (F - 32) × 5/9
+            return (temp - 32) * 5/9;
+        }
+        return temp;
+    }
+
+    convertWeatherDataUnits(data, fromUnit, toUnit) {
+        // Convert temperature values in weather data
+        data.main.temp = this.convertTemperature(data.main.temp, fromUnit, toUnit);
+        data.main.feels_like = this.convertTemperature(data.main.feels_like, fromUnit, toUnit);
+        data.main.temp_min = this.convertTemperature(data.main.temp_min, fromUnit, toUnit);
+        data.main.temp_max = this.convertTemperature(data.main.temp_max, fromUnit, toUnit);
+        
+        // Convert wind speed if needed
+        if (fromUnit === 'metric' && toUnit === 'imperial') {
+            // m/s to mph: multiply by 2.237
+            data.wind.speed = data.wind.speed * 2.237;
+        } else if (fromUnit === 'imperial' && toUnit === 'metric') {
+            // mph to m/s: divide by 2.237
+            data.wind.speed = data.wind.speed / 2.237;
+        }
+    }
+
+    convertForecastDataUnits(data, fromUnit, toUnit) {
+        // Convert temperature values in forecast data
+        data.list.forEach(item => {
+            item.main.temp = this.convertTemperature(item.main.temp, fromUnit, toUnit);
+            item.main.feels_like = this.convertTemperature(item.main.feels_like, fromUnit, toUnit);
+            item.main.temp_min = this.convertTemperature(item.main.temp_min, fromUnit, toUnit);
+            item.main.temp_max = this.convertTemperature(item.main.temp_max, fromUnit, toUnit);
+            
+            // Convert wind speed if needed
+            if (fromUnit === 'metric' && toUnit === 'imperial') {
+                item.wind.speed = item.wind.speed * 2.237;
+            } else if (fromUnit === 'imperial' && toUnit === 'metric') {
+                item.wind.speed = item.wind.speed / 2.237;
+            }
+        });
     }
 
     updateUnitDisplay() {
