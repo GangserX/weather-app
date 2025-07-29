@@ -68,6 +68,11 @@ class WeatherApp {
         // Forecast elements
         this.forecastContainer = document.getElementById('forecastContainer');
 
+        // Chart toggle elements
+        this.currentTempToggle = document.getElementById('currentTempToggle');
+        this.maxTempToggle = document.getElementById('maxTempToggle');
+        this.minTempToggle = document.getElementById('minTempToggle');
+
         // PWA elements
         this.installPrompt = document.getElementById('installPrompt');
         this.installBtn = document.getElementById('installBtn');
@@ -96,6 +101,11 @@ class WeatherApp {
 
         // Error retry
         this.errorRetryBtn.addEventListener('click', () => this.handleSearch());
+
+        // Chart toggles
+        this.currentTempToggle.addEventListener('click', () => this.toggleChartLine('current'));
+        this.maxTempToggle.addEventListener('click', () => this.toggleChartLine('max'));
+        this.minTempToggle.addEventListener('click', () => this.toggleChartLine('min'));
 
         // PWA install
         this.installBtn.addEventListener('click', () => this.installPWA());
@@ -135,15 +145,11 @@ class WeatherApp {
         const previousUnit = this.currentUnit;
         this.currentUnit = this.currentUnit === 'metric' ? 'imperial' : 'metric';
         
-        console.log('Toggling from', previousUnit, 'to', this.currentUnit);
-        
         this.updateUnitDisplay();
         
         // Convert existing weather data to new unit
         if (this.currentWeatherData) {
-            console.log('Before conversion:', this.currentWeatherData.main.temp);
             this.convertWeatherDataUnits(this.currentWeatherData, previousUnit, this.currentUnit);
-            console.log('After conversion:', this.currentWeatherData.main.temp);
             this.displayWeatherData(this.currentWeatherData);
         }
         if (this.forecastData) {
@@ -382,8 +388,6 @@ class WeatherApp {
 
     // Display Functions
     displayWeatherData(data) {
-        console.log('Displaying weather data:', data.main.temp, 'Unit:', this.currentUnit);
-        
         // Location and time
         this.cityName.textContent = data.name;
         this.countryName.textContent = data.sys.country;
@@ -398,8 +402,6 @@ class WeatherApp {
         const temp = Math.round(data.main.temp);
         const feelsLike = Math.round(data.main.feels_like);
         const unit = this.currentUnit === 'metric' ? '°C' : '°F';
-        
-        console.log('Setting temperature to:', `${temp}${unit}`);
         
         this.temperature.textContent = `${temp}${unit}`;
         this.feelsLike.textContent = `${feelsLike}${unit}`;
@@ -519,40 +521,93 @@ class WeatherApp {
         }
 
         const labels = [];
-        const temperatures = [];
+        const currentTemperatures = [];
+        const maxTemperatures = [];
+        const minTemperatures = [];
         
         // Take every 8th item (24 hours apart) for the next 5 days
         for (let i = 0; i < Math.min(40, forecastData.list.length); i += 8) {
             const item = forecastData.list[i];
             const date = new Date(item.dt * 1000);
             labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            temperatures.push(Math.round(item.main.temp));
+            currentTemperatures.push(Math.round(item.main.temp));
+            maxTemperatures.push(Math.round(item.main.temp_max));
+            minTemperatures.push(Math.round(item.main.temp_min));
         }
+
+        const tempUnit = this.currentUnit === 'metric' ? '°C' : '°F';
 
         this.temperatureChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: `Temperature (${this.currentUnit === 'metric' ? '°C' : '°F'})`,
-                    data: temperatures,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#667eea',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6
-                }]
+                datasets: [
+                    {
+                        label: `Current Temperature (${tempUnit})`,
+                        data: currentTemperatures,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    },
+                    {
+                        label: `Maximum Temperature (${tempUnit})`,
+                        data: maxTemperatures,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: '#ff6b6b',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    },
+                    {
+                        label: `Minimum Temperature (${tempUnit})`,
+                        data: minTemperatures,
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: '#4ecdc4',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#667eea',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true
                     }
                 },
                 scales: {
@@ -560,6 +615,11 @@ class WeatherApp {
                         beginAtZero: false,
                         grid: {
                             color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + tempUnit;
+                            }
                         }
                     },
                     x: {
@@ -567,6 +627,11 @@ class WeatherApp {
                             color: 'rgba(0, 0, 0, 0.1)'
                         }
                     }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
                 }
             }
         });

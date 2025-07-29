@@ -232,7 +232,23 @@
 
             <!-- Temperature Chart -->
             <section class="chart-section">
-                <h3 class="section-title">Temperature Trend</h3>
+                <h3 class="section-title">Temperature Trends (Current, Max & Min)</h3>
+                <div class="chart-controls">
+                    <div class="chart-toggles">
+                        <button class="chart-toggle active" id="currentTempToggle" data-line="current">
+                            <span class="toggle-color current-color"></span>
+                            Current Temp
+                        </button>
+                        <button class="chart-toggle active" id="maxTempToggle" data-line="max">
+                            <span class="toggle-color max-color"></span>
+                            Max Temp
+                        </button>
+                        <button class="chart-toggle active" id="minTempToggle" data-line="min">
+                            <span class="toggle-color min-color"></span>
+                            Min Temp
+                        </button>
+                    </div>
+                </div>
                 <div class="chart-container">
                     <canvas id="temperatureChart"></canvas>
                 </div>
